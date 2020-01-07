@@ -14,17 +14,18 @@ namespace WPFOpenGl
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-
-
 		private MapHeight mapHeight;
-		private double zoom = 0.006f;
+		private double zoom = 0.007f;
 
-		private double eyeZ = 1f, eyeX = 1f, eyeY = 0f;
+		private double eyeZ = 1f, eyeX = 1f, eyeY = 0.5f;
 		private double velocityCam = 0.01f;
 		private GLColor[,] colors;
 		private float texBit;
+		private int numFrame = 0;
 
-		Texture texture = new Texture();
+		Texture textureGround = new Texture();
+		Texture textureSnow = new Texture();
+		Texture textureWater = new Texture();
 
 		private float rtri = 0;
 		//Random rand = new Random();
@@ -35,7 +36,7 @@ namespace WPFOpenGl
 		{
 			InitializeComponent();
 
-			mapHeight = new MapHeight(256, 0.002f);
+			mapHeight = new MapHeight(256, 0.66, 0.25);
 
 			texBit = 1.0f / mapHeight.MapSize;
 
@@ -52,213 +53,80 @@ namespace WPFOpenGl
 
 		private void OpenGLControl_OpenGLDraw(object sender, OpenGLEventArgs args)
 		{
+			numFrame++;
+			if (numFrame % 1 == 0)
+				mapHeight.update_map();
+
 			//var gl = args.OpenGL;
 			OpenGL gl = openGlCtrl.OpenGL;
+
+
+			//gl.MatrixMode(OpenGL.GL_PROJECTION);
 
 			//Очистка цветого буфера экрана и z-буфера
 			gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
 			gl.LoadIdentity();
 
+			//  Преобразование
+			//gl.Perspective(60.0f, (double)Width / (double)Height, 0.01, 100.0);
+			//gl.LookAt(-1, -1, 0.2,    // Позиция самой камеры (x, y, z)
+			//		   1, 1, 10,     // Направление, куда мы смотрим
+			//		   0, 1, 0);    // Верх камеры
+			//						//  Зададим модель отображения
+			//gl.MatrixMode(OpenGL.GL_MODELVIEW);
+
 
 			gl.LookAt(eyeX, eyeY, eyeZ, eyeX + 5f, eyeY + 5f, eyeZ + 5f, 0f, 1f, 0f);
 
+
 			gl.Translate(1f, 0f, 1f);             //Сдвиг
-			gl.Rotate(rtri, 0f, 1f, 0f);      //Вращение
+			//gl.Rotate(rtri, 0f, 1f, 0f);      //Вращение
 			gl.Translate(-1f, 0f, -1f);             //Сдвиг
 
-			texture.Bind(gl);
+			textureGround.Bind(gl);
+			build_landscape(gl, TypeOfLandscape.Ground);
 
-			gl.Begin(OpenGL.GL_TRIANGLES);
-			Random rand = new Random();
+			textureSnow.Bind(gl);
+			build_landscape(gl, TypeOfLandscape.Snow);
 
-			for (int i = 0; i < mapHeight.MapSize - 1; i++)
-				for (int j = 0; j < mapHeight.MapSize - 1; j++)
-				{
-					double x = j * zoom;
-					double y = i * zoom;
+			textureWater.Bind(gl);
+			build_landscape(gl, TypeOfLandscape.Water);
 
-					gl.Color(1f, 1f, 1f);
-					gl.TexCoord(i * texBit, j * texBit);
-					gl.Vertex(x, mapHeight.get_height(i, j), y);
-					gl.TexCoord(i * texBit, (j+1) * texBit);
-					gl.Vertex(x + zoom, mapHeight.get_height(i, j + 1), y);
-					gl.TexCoord((i+1) * texBit, j * texBit);
-					gl.Vertex(x, mapHeight.get_height(i + 1, j), y + zoom);
-
-					gl.TexCoord(i * texBit, (j + 1) * texBit);
-					gl.Vertex(x + zoom, mapHeight.get_height(i, j + 1), y);
-					gl.TexCoord((i + 1) * texBit, j * texBit);
-					gl.Vertex(x, mapHeight.get_height(i + 1, j), y + zoom);
-					gl.TexCoord((i + 1) * texBit, (j + 1) * texBit);
-					gl.Vertex(x + zoom, mapHeight.get_height(i + 1, j + 1), y + zoom);
-				}
-
-
-			gl.End();
-			gl.Flush();
 			rtri += 2f;
 		}
 
-		//private void OpenGLControl_OpenGLDraw(object sender, OpenGLEventArgs args)
-		//{
-		//	//var gl = args.OpenGL;
-		//	OpenGL gl = openGlCtrl.OpenGL;
 
-		//	//Очистка цветого буфера экрана и z-буфера
-		//	gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
-		//	gl.LoadIdentity();
+		private void build_landscape(OpenGL gl, TypeOfLandscape typeLandscape)
+		{
+			gl.Begin(OpenGL.GL_TRIANGLES);
+			for (int i = 0; i < mapHeight.MapSize - 1; i++)
+				for (int j = 0; j < mapHeight.MapSize - 1; j++)
+				{
+					if (mapHeight.get_type(i, j) == typeLandscape)
+					{
+						double x = j * zoom;
+						double y = i * zoom;
 
-		//	gl.Translate(0f, 0.0f, 0f);				//Сдвиг
-		//	gl.Rotate(rtri, rotX, rotY, rotZ);      //Вращение
+						gl.Color(1f, 1f, 1f);
 
-		//	rotX += rand.NextDouble();
-		//	rotY += rand.NextDouble();
-		//	rotZ += rand.NextDouble();
+						gl.TexCoord(i * texBit, j * texBit);
+						gl.Vertex(x, mapHeight.get_height(i, j), y);
+						gl.TexCoord(i * texBit, (j + 1) * texBit);
+						gl.Vertex(x + zoom, mapHeight.get_height(i, j + 1), y);
+						gl.TexCoord((i + 1) * texBit, j * texBit);
+						gl.Vertex(x, mapHeight.get_height(i + 1, j), y + zoom);
 
-
-		//	texture.Bind(gl);
-
-		//	gl.Begin(OpenGL.GL_QUADS);
-
-		//	gl.Color(1f, 1f, 1f);
-		//	gl.TexCoord(0f, 0f);			gl.Vertex(0.25f, 0.25f, -0.25f);
-		//	gl.TexCoord(0.2f, 0f);			gl.Vertex(-0.25f, 0.25f, -0.25f);
-		//	gl.TexCoord(0.2f, 0.2f);			gl.Vertex(-0.25f, 0.25f, 0.25f);
-		//	gl.TexCoord(0f, 0.2f);			gl.Vertex(0.25f, 0.25f, 0.25f);
-
-
-		//	gl.TexCoord(0f, 0f);	gl.Vertex(0.25f, -0.25f, 0.25f);
-		//	gl.TexCoord(1f, 0f);	gl.Vertex(-0.25f, -0.25f, 0.25f);
-		//	gl.TexCoord(1f, 1f);	gl.Vertex(-0.25f, -0.25f, -0.25f);
-		//	gl.TexCoord(0f, 1f);	gl.Vertex(0.25f, -0.25f, -0.25f);
-
-		//	gl.TexCoord(0f, 0f);		gl.Vertex(0.25f, 0.25f, 0.25f);
-		//	gl.TexCoord(1f, 0f);		gl.Vertex(-0.25f, 0.25f, 0.25f);
-		//	gl.TexCoord(1f, 1f);		gl.Vertex(-0.25f, -0.25f, 0.25f);
-		//	gl.TexCoord(0f, 1f);		gl.Vertex(0.25f, -0.25f, 0.25f);
-
-		//	gl.TexCoord(0f, 0f);		gl.Vertex(0.25f, -0.25f, -0.25f);
-		//	gl.TexCoord(1f, 0f);		gl.Vertex(-0.25f, -0.25f, -0.25f);
-		//	gl.TexCoord(1f, 1f);		gl.Vertex(-0.25f, 0.25f, -0.25f);
-		//	gl.TexCoord(0f, 1f);		gl.Vertex(0.25f, 0.25f, -0.25f);
-
-		//	gl.TexCoord(0f, 0f);		gl.Vertex(-0.25f, 0.25f, 0.25f);
-		//	gl.TexCoord(1f, 0f);		gl.Vertex(-0.25f, 0.25f, -0.25f);
-		//	gl.TexCoord(1f, 1f);		gl.Vertex(-0.25f, -0.25f, -0.25f);
-		//	gl.TexCoord(0f, 1f);		gl.Vertex(-0.25f, -0.25f, 0.25f);
-
-		//	gl.TexCoord(0f, 0f);		gl.Vertex(0.25f, 0.25f, -0.25f);
-		//	gl.TexCoord(1f, 0f);		gl.Vertex(0.25f, 0.25f, 0.25f);
-		//	gl.TexCoord(1f, 1f);		gl.Vertex(0.25f, -0.25f, 0.25f);
-		//	gl.TexCoord(0f, 1f);		gl.Vertex(0.25f, -0.25f, -0.25f);
-
-		//	gl.End();
-
-		//	gl.Flush();
-
-		//	rtri += 0.5f;
-		//}
-
-
-
-		//private void OpenGLControl_OpenGLDraw(object sender, OpenGLEventArgs args)
-		//{
-		//	//var gl = args.OpenGL;
-		//	OpenGL gl = openGlCtrl.OpenGL;
-
-		//	//Очистка цветого буфера экрана и z-буфера
-		//	gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
-		//	gl.LoadIdentity();
-
-		//	gl.Translate(0.5f, 0.0f, 0f);       //Сдвиг
-		//	gl.Rotate(rtri, 1f, 1f, 0f);               //Вращение
-
-
-		//	gl.Begin(OpenGL.GL_TRIANGLES);      //Рисуем треугольники
-
-		//	gl.Color(1f, 0, 0);
-		//	gl.Vertex(0, 0.25f, 0);
-		//	gl.Color(0, 1f, 0);
-		//	gl.Vertex(-0.25f, -0.25f, 0.25f);
-		//	gl.Color(0, 0, 1f);
-		//	gl.Vertex(0.25f, -0.25f, 0.25f);
-
-		//	gl.Color(1f, 0, 0);
-		//	gl.Vertex(0, 0.25f, 0);
-		//	gl.Color(0, 0, 1f);
-		//	gl.Vertex(0.25f, -0.25f, 0.25f);
-		//	gl.Color(0, 1f, 0);
-		//	gl.Vertex(0.25f, -0.25f, -0.25f);
-
-		//	gl.Color(1f, 0, 0);
-		//	gl.Vertex(0, 0.25f, 0);
-		//	gl.Color(0, 1f, 0);
-		//	gl.Vertex(0.25f, -0.25f, -0.25f);
-		//	gl.Color(0, 0, 1f);
-		//	gl.Vertex(-0.25f, -0.25f, -0.25f);
-
-		//	gl.Color(1f, 0, 0);
-		//	gl.Vertex(0, 0.25f, 0);
-		//	gl.Color(0, 0, 1f);
-		//	gl.Vertex(-0.25f, -0.25f, -0.25f);
-		//	gl.Color(0, 1f, 0);
-		//	gl.Vertex(-0.25f, -0.25f, 0.25f);
-
-		//	gl.End();
-
-		//	gl.LoadIdentity();
-
-		//	gl.Translate(-0.5f, 0, 0f);
-		//	gl.Rotate(rquad, 1f, 1f, 1f);
-
-
-
-		//	gl.Begin(OpenGL.GL_QUADS);
-
-		//	gl.Color(0, 1f, 0);
-		//	gl.Vertex(0.25f, 0.25f, -0.25f);
-		//	gl.Vertex(-0.25f, 0.25f, -0.25f);
-		//	gl.Vertex(-0.25f, 0.25f, 0.25f);
-		//	gl.Vertex(0.25f, 0.25f, 0.25f);
-
-		//	gl.Color(1f, 0.5f, 0);
-		//	gl.Vertex(0.25f, -0.25f, 0.25f);
-		//	gl.Vertex(-0.25f, -0.25f, 0.25f);
-		//	gl.Vertex(-0.25f, -0.25f, -0.25f);
-		//	gl.Vertex(0.25f, -0.25f, -0.25f);
-
-		//	gl.Color(1f, 0, 0);
-		//	gl.Vertex(0.25f, 0.25f, 0.25f);
-		//	gl.Vertex(-0.25f, 0.25f, 0.25f);
-		//	gl.Vertex(-0.25f, -0.25f, 0.25f);
-		//	gl.Vertex(0.25f, -0.25f, 0.25f);
-
-		//	gl.Color(1f, 1f, 0);
-		//	gl.Vertex(0.25f, -0.25f, -0.25f);
-		//	gl.Vertex(-0.25f, -0.25f, -0.25f);
-		//	gl.Vertex(-0.25f, 0.25f, -0.25f);
-		//	gl.Vertex(0.25f, 0.25f, -0.25f);
-
-
-		//	gl.Color(0, 0, 1f);
-		//	gl.Vertex(-0.25f, 0.25f, 0.25f);
-		//	gl.Vertex(-0.25f, 0.25f, -0.25f);
-		//	gl.Vertex(-0.25f, -0.25f, -0.25f);
-		//	gl.Vertex(-0.25f, -0.25f, 0.25f);
-
-		//	gl.Color(1f, 0, 1f);
-		//	gl.Vertex(0.25f, 0.25f, -0.25f);
-		//	gl.Vertex(0.25f, 0.25f, 0.25f);
-		//	gl.Vertex(0.25f, -0.25f, 0.25f);
-		//	gl.Vertex(0.25f, -0.25f, -0.25f);
-
-		//	gl.End();
-
-		//	gl.Flush();
-
-		//	rtri += 3.0f;
-		//	rquad += 3.0f;
-		//}
+						gl.TexCoord(i * texBit, (j + 1) * texBit);
+						gl.Vertex(x + zoom, mapHeight.get_height(i, j + 1), y);
+						gl.TexCoord((i + 1) * texBit, j * texBit);
+						gl.Vertex(x, mapHeight.get_height(i + 1, j), y + zoom);
+						gl.TexCoord((i + 1) * texBit, (j + 1) * texBit);
+						gl.Vertex(x + zoom, mapHeight.get_height(i + 1, j + 1), y + zoom);
+					}
+				}
+			gl.End();
+			gl.Flush();
+		}
 
 		private void OpenGLControl_OpenGLInitialized(object sender, OpenGLEventArgs args)
 		{
@@ -289,7 +157,11 @@ namespace WPFOpenGl
 
 			gl.Enable(OpenGL.GL_TEXTURE_2D);
 			string path = "H:\\Университет\\7 сем\\Комп. графика\\Курсач\\WPFOpenGl\\WPFOpenGl\\WPFOpenGl\\Moss_Dirt.bmp";
-			texture.Create(gl, path);
+			textureGround.Create(gl, path);
+			path = "H:\\Университет\\7 сем\\Комп. графика\\Курсач\\WPFOpenGl\\WPFOpenGl\\WPFOpenGl\\Moss_Dirt_Snow.bmp";
+			textureSnow.Create(gl, path);
+			path = "H:\\Университет\\7 сем\\Комп. графика\\Курсач\\WPFOpenGl\\WPFOpenGl\\WPFOpenGl\\Water.bmp";
+			textureWater.Create(gl, path);
 		}
 
 		private void Window_KeyDown(object sender, KeyEventArgs e)
@@ -309,10 +181,12 @@ namespace WPFOpenGl
 					eyeX -= velocityCam;
 					break;
 				case Key.Q:
-					eyeZ += velocityCam;
+					//eyeZ += velocityCam;
+					zoom += 0.0001;
 					break;
 				case Key.E:
-					eyeZ -= velocityCam;
+					//eyeZ -= velocityCam;
+					zoom -= 0.0001;
 					break;
 			}
 		}
