@@ -28,9 +28,6 @@ namespace WPFOpenGl
 		Texture textureWater = new Texture();
 
 		private float rtri = 0;
-		//Random rand = new Random();
-		//double rotX = 0, rotY = 0, rotZ = 0;
-		//private float rquad = 0;
 
 		public MainWindow()
 		{
@@ -46,7 +43,6 @@ namespace WPFOpenGl
 				for (int j = 0; j < mapHeight.MapSize - 1; j++)
 				{
 					float col = (float)rand.NextDouble() / 2.0f + 0.5f;
-					//float col = (float)rand.NextDouble();
 					colors[i, j] = new GLColor(col, col, col, 1f);
 				}
 		}
@@ -57,30 +53,18 @@ namespace WPFOpenGl
 			if (numFrame % 1 == 0)
 				mapHeight.update_map();
 
-			//var gl = args.OpenGL;
 			OpenGL gl = openGlCtrl.OpenGL;
-
-
-			//gl.MatrixMode(OpenGL.GL_PROJECTION);
-
+			
 			//Очистка цветого буфера экрана и z-буфера
 			gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
 			gl.LoadIdentity();
-
-			//  Преобразование
-			//gl.Perspective(60.0f, (double)Width / (double)Height, 0.01, 100.0);
-			//gl.LookAt(-1, -1, 0.2,    // Позиция самой камеры (x, y, z)
-			//		   1, 1, 10,     // Направление, куда мы смотрим
-			//		   0, 1, 0);    // Верх камеры
-			//						//  Зададим модель отображения
-			//gl.MatrixMode(OpenGL.GL_MODELVIEW);
-
+			
 
 			gl.LookAt(eyeX, eyeY, eyeZ, eyeX + 5f, eyeY + 5f, eyeZ + 5f, 0f, 1f, 0f);
 
 
 			gl.Translate(1f, 0f, 1f);             //Сдвиг
-			//gl.Rotate(rtri, 0f, 1f, 0f);      //Вращение
+			gl.Rotate(rtri, 0f, 1f, 0f);      //Вращение
 			gl.Translate(-1f, 0f, -1f);             //Сдвиг
 
 			textureGround.Bind(gl);
@@ -92,7 +76,7 @@ namespace WPFOpenGl
 			textureWater.Bind(gl);
 			build_landscape(gl, TypeOfLandscape.Water);
 
-			rtri += 2f;
+			rtri += 0.4f;
 		}
 
 

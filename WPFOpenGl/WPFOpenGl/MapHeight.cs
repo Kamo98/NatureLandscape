@@ -92,42 +92,32 @@ namespace WPFOpenGl
 		{
 			return typeLandscape[i, j];
 		}
-
-		//private void init_map_random()
-		//{
-		//	Random rand = new Random();
-
-		//	for (int i = 0; i < MapSize; i++)
-		//		for (int j = 0; j < MapSize; j++)
-		//			map[i, j] = rand.NextDouble() / 2;
-		//}
-
-
+		
 
 		public void update_map ()
 		{
-			clear_map();
+			clear_map();	//Очистить карту высот
 			for (int k = 0; k < countHills; k++)
 			{
-				//Выбор случайного центра и радиуса холма
+				//Получаем параметры k-го холма
 				int ii = hills[k].ICentre, jj = hills[k].JCentre;
-				//int ii = hills[k].update_i(mapSize), jj = hills[k].update_j(mapSize);
 				double r = hills[k].update_radius();
 				int rInt = (int)r;
 
+				//Пройти по квадрату, описыввающему окружность, и поднять холм
 				for (int i = ii - rInt; i < ii + rInt; i++)
 					for (int j = jj - rInt; j < jj + rInt; j++)
 						if (i >= 0 && i < mapSize && j >= 0 && j < mapSize)
 							map[i, j] += Math.Max(0, r * r - ((j - jj) * (j - jj) + (i - ii) * (i - ii)));
 			}
-			normalization_map();
+			normalization_map();		//Нормализовать карту высот
 		}
 
 		private void init_map_hills()
 		{
 			Random rand = new Random();
 
-			clear_map();
+			clear_map();		//Очистить карту высот
 
 			for (int k = 0; k < countHills; k++)
 			{
@@ -135,15 +125,18 @@ namespace WPFOpenGl
 				int ii = rand.Next(0, mapSize), jj = rand.Next(0, mapSize);
 				int r = rand.Next(1, maxR);
 
+				//Сохранить параметры холма для последующего его обновления
 				hills[k] = new Hill(r, ii, jj);
 
+				//Пройти по квадрату, описыввающему окружность, и поднять холм
 				for (int i = ii - r; i < ii + r; i++)
 					for (int j = jj - r; j < jj + r; j++)
 						if (i >= 0 && i < mapSize && j >= 0 && j < mapSize)
 							map[i, j] += Math.Max(0, r * r - ((j - jj) * (j - jj) + (i - ii) * (i - ii)));
+							//map[i, j] += r * r - ((j - jj) * (j - jj) + (i - ii) * (i - ii));
 			}
 
-			normalization_map();
+			normalization_map();        //Нормализовать карту высот
 		}
 
 
