@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace WPFOpenGl
 {
-	enum TypeOfLandscape        //Тип текстуры
+	public enum TypeOfLandscape        //Тип текстуры
 	{
 		Snow,       //Снег
 		Ground,     //Замля
 		Water       //Вода
 	}
 
-	class MapHeight
+	public class MapHeight
 	{
 		class Hill
 		{
